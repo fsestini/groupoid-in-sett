@@ -220,3 +220,53 @@ module _ (Γ : Con i) {ρ₀ ρ₁ : Δ ⟶ Γ} (p : Tm Δ (El-set ((Γ ~) ρ₀
     ; tm-refl = tt
     ; tm-trans = tt
     }
+
+module _ {Γ : Con i} (A : Ty j Γ)
+         (ρ₀ ρ₁ : Δ ⟶ Γ) (p : Tm Δ (El-set ((Γ ~) ρ₀ ρ₁))) where
+
+  coe~ : Tm Δ (A [ ρ₀ ]) -> Tm Δ (A [ ρ₁ ])
+  coe~ a = record
+    { tm0 = λ δ → f0 (subst* A (tm0 p δ)) (tm0 a δ)
+    ; tm1 = λ { {γ = γ} {γ'} q →
+        let aux : HomEq Γ (f1 ρ₀ q) (f1 ρ₁ q) (tm0 p γ) (tm0 p γ')
+            aux = unlift (tm1 p q)
+            aux1 : IxHom A (f1 ρ₀ q) (tm0 a γ) (tm0 a γ')
+            aux1 = tm1 a q
+            s = hom-sy Γ
+            t = hom-tr Γ
+            eq : T Γ (T Γ (f1 ρ₁ q) (S Γ (tm0 p γ'))) (tm0 p γ') ≡ f1 ρ₁ q
+            eq = t (s (assoc Γ)) (t (cong (T Γ (f1 ρ₁ q)) (inv2 Γ)) (id1 Γ))
+            goal : IxHom A (f1 ρ₁ q)
+                         (f0 (subst* A (tm0 p γ)) (tm0 a γ))
+                         (f0 (subst* A (tm0 p γ')) (tm0 a γ'))
+            goal = transp-IxHom A eq (subst*-eq A aux aux1)
+        in goal }
+
+    ; tm-refl = λ {γ} → {!!}
+        -- let open Eq-Reasoning (Hom (∣ A ∣* _) _ _)
+        --     goal : transp-IxHom A _ (subst*-eq A _ (tm1 a (R Δ γ)))
+        --          ≡ IxR (A [ ρ₁ ]) (f0 (subst* A (tm0 p γ)) (tm0 a γ))
+        --     goal = begin
+        --       {!!}
+        --         ≡⟨ {!!} ⟩
+        --       transp-IxHom A _ (subst*-eq A _ (IxR (A [ ρ₀ ]) (tm0 a γ)))
+        --         ≡⟨ {!subst*-eq A ?!} ⟩
+        --       {!!}
+        --         ≡⟨ {!!} ⟩
+        --       {!!}
+        --         ≡⟨ {!!} ⟩
+        --       {!!}
+        --         ∎
+        -- in goal
+    ; tm-trans = {!!}
+    }
+
+module _ {Γ : Con i} {ρ₀ ρ₁ : Δ ⟶ Γ}
+         {δ₀ δ₁} {p : Hom Δ δ₀ δ₁}
+         {t₀ : Hom Γ (f0 ρ₀ δ₀) (f0 ρ₁ δ₀)}
+         {t₁ : Hom Γ (f0 ρ₀ δ₁) (f0 ρ₁ δ₁)}
+         where
+
+  IxSetEq~ : IxSetEq ((Γ ~) ρ₀ ρ₁) p t₀ t₁
+           ≡ HomEq Γ (f1 ρ₀ p) (f1 ρ₁ p) t₀ t₁
+  IxSetEq~ = refl (IxSetEq ((Γ ~) ρ₀ ρ₁) p t₀ t₁)

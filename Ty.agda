@@ -97,6 +97,33 @@ module _ {Γ : Con i} (A : Ty j Γ) where
         -> HEq (λ z -> IxHom z _ _) (inv2 Γ {p = p}) (IxT (IxS q) q) (IxR y)
   inv2* = {!!}
 
+module _ {Γ : Con i} (A : Ty j Γ) {γ γ' γ'' a b}
+         (p : Hom Γ γ γ') {p' : Hom Γ γ'' γ}
+         (q : IxHom A p' a b) where
+
+  subst*-Ix1 : IxHom A p (f0 (subst* A p') a) (f0 (subst* A p) b)
+  subst*-Ix1 = f1 (subst* A p) q
+
+module _ {Γ : Con i} (A : Ty j Γ)
+         {γ₀ γ₁ γ₀' γ₁'} {p₀ : Hom Γ γ₀ γ₁} {p₁ : Hom Γ γ₀' γ₁'}
+         {k₀ : Hom Γ γ₀ γ₀'} {k₁ : Hom Γ γ₁ γ₁'}
+         {a₀ a₁}
+         where
+
+  subst*-eq : HomEq Γ k₀ k₁ p₀ p₁
+            → IxHom A k₀ a₀ a₁
+            → IxHom A _
+                      (f0 (subst* A p₀) a₀)
+                      (f0 (subst* A p₁) a₁)
+  subst*-eq p-eq a-morph = IxT A m (subst*-Ix1 A p₁ a-morph)
+    where
+      open Eq-Reasoning (∣ ∣ A ∣* _ ∣)
+      aux-eq : T Γ p₀ (T Γ k₁ (S Γ p₁)) ≡ k₀
+      aux-eq = {!!}
+      aux-eq' = tr (sy (trans*0 A _ _ a₀)) (cong (λ z → f0 (subst* A z) a₀) aux-eq)
+      m = coe (λ z → Hom (∣ A ∣* _) z (f0 (subst* A k₀) a₀))
+              (sy aux-eq') (R (∣ A ∣* _) (f0 (subst* A k₀) a₀))
+
 module _ {Γ : Con i} (A : Ty j Γ) where
 
   IxHomEq : ∀{γ γ' γ'' γ''' x y x' y'}
@@ -111,40 +138,42 @@ module _ {Γ : Con i} (A : Ty j Γ) where
     HEq (λ z → IxHom A z _ _) r (IxT A (IxS A k₀) (IxT A q₀ k₁)) q₁
     -- coe (λ z -> IxHom A z _ _) r (IxT A (IxS A k₀) (IxT A q₀ k₁)) ≡ q₁
 
-  module _ {γ γ' γ''' γ4 γ5 a b c d}
-           {x y z k x' y' : _}
-           {p₀ : _}
-           {p₀' : _}
-           {p₁ : _}
-           {p₁' : _}
-           {k1 : Hom Γ γ γ'}
-           {k2 : Hom Γ γ γ'''}
-           {k1' : Hom Γ γ γ4}
-           {k2' : Hom Γ γ γ5}
-           {r : HomEq Γ k1 k2 p₀ p₁}
-           {r' : HomEq Γ k1' k2' p₀' p₁'}
-           {q₀ : IxHom A p₀ x y}
-           {q₁ : IxHom A p₁ a b}
-           {q₀' : IxHom A p₀' x' y'}
-           {q₁' : IxHom A p₁' c d}
-           {eq0 : IxHom A k1 x a}
-           {eq1 : IxHom A k2 y _}
-           {eq0' : IxHom A k1' x' _}
-           {eq1' : IxHom A k2' y' _}
+  module _
+           {γ₀ γ₁ γ₂ γ₃ x₀ y₀ x₁ y₁}
+           {p₀ : Hom Γ γ₀ γ₁} {p₁ : Hom Γ γ₂ γ₃}
+           {p₂ : Hom Γ _ _} {p₃ : Hom Γ _ _}
+           {r : HomEq Γ p₂ p₃ p₀ p₁}
+           {k₀ : IxHom A p₂ x₀ x₁}
+           {k₁ : IxHom A p₃ y₀ y₁}
+           {q₀ : IxHom A p₀ x₀ y₀}
+           {q₁ : IxHom A p₁ x₁ y₁}
 
-           {f1 f2 f3 f4}
-           {eq-p0 : HomEq Γ f1 f2 p₀ p₀'}
-           {eq-x : IxHom A f1 x x'}
-           {eq-y : IxHom A f2 y y'}
-           {eq-p1 : HomEq Γ f3 f4 p₁ p₁'}
-           {eq-ac : IxHom A f3 a c}
-           {eq-bd : IxHom A f4 b d}
+           {γ₀' γ₁' γ₂' γ₃' x₀' y₀' x₁' y₁'}
+           {p₀' : Hom Γ γ₀' γ₁'} {p₁' : Hom Γ γ₂' γ₃'}
+           {p₂' : Hom Γ _ _} {p₃' : Hom Γ _ _}
+           {r' : HomEq Γ p₂' p₃' p₀' p₁'}
+           {k₀' : IxHom A p₂' x₀' x₁'}
+           {k₁' : IxHom A p₃' y₀' y₁'}
+           {q₀' : IxHom A p₀' x₀' y₀'}
+           {q₁' : IxHom A p₁' x₁' y₁'}
 
-           (eq-0 : IxHomEq eq-p0 eq-x eq-y q₀ q₀')
-           (eq-1 : IxHomEq eq-p1 eq-ac eq-bd q₁ q₁')
+           {j₀ j₁ j₂ j₃}
+           {k₀'' : IxHom A j₀ x₁ x₁'}
+           {k₀''' : IxHom A j₁ x₀ x₀'}
+           {k₁'' : IxHom A j₂ y₁ y₁'}
+           {k₁''' : IxHom A j₃ y₀ y₀'}
+           {r-right : HomEq Γ _ _ p₁ p₁'}
+           {r-top : HomEq Γ _ _ p₂ p₂'}
+           {r-bottom : HomEq Γ p₃ p₃' _ _}
+           {r-left : HomEq Γ _ _ p₀ p₀'}
+
+           (eq-top : IxHomEq r-top k₀''' k₀'' k₀ k₀')
+           (eq-bottom : IxHomEq r-bottom k₁ k₁' k₁''' k₁'')
+           (eq-left : IxHomEq r-left k₀''' k₁''' q₀ q₀')
+           (eq-right : IxHomEq r-right k₀'' k₁'' q₁ q₁')
            where
 
-    IxHomEq-≡ : IxHomEq r eq0 eq1 q₀ q₁ ≡ IxHomEq r' eq0' eq1' q₀' q₁'
+    IxHomEq-≡ : IxHomEq r k₀ k₁ q₀ q₁ ≡ IxHomEq r' k₀' k₁' q₀' q₁'
     IxHomEq-≡ = {!!}
 
 
