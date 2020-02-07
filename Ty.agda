@@ -135,8 +135,8 @@ module _ {Γ : Con i} (A : Ty j Γ) where
            -> IxHom A p₀ x y -> IxHom A p₁ x' y'
            -> Prop _
   IxHomEq r k₀ k₁ q₀ q₁ =
-    HEq (λ z → IxHom A z _ _) r (IxT A (IxS A k₀) (IxT A q₀ k₁)) q₁
-    -- coe (λ z -> IxHom A z _ _) r (IxT A (IxS A k₀) (IxT A q₀ k₁)) ≡ q₁
+    -- HEq (λ z → IxHom A z _ _) r (IxT A (IxS A k₀) (IxT A q₀ k₁)) q₁
+    coe (λ z -> IxHom A z _ _) r (IxT A (IxS A k₀) (IxT A q₀ k₁)) ≡ q₁
 
   module _
            {γ₀ γ₁ γ₂ γ₃ x₀ y₀ x₁ y₁}
@@ -176,27 +176,6 @@ module _ {Γ : Con i} (A : Ty j Γ) where
     IxHomEq-≡ : IxHomEq r k₀ k₁ q₀ q₁ ≡ IxHomEq r' k₀' k₁' q₀' q₁'
     IxHomEq-≡ = {!!}
 
-
-  -- IxHomEq-≡ : ∀{γ γ' γ'' γ''' x y x' y'}
-  --             {p₀ : Hom Γ γ γ'} {p₁ : Hom Γ γ'' γ'''}
-  --             {p₂ : Hom Γ _ _} {p₃ : Hom Γ _ _}
-  --           -> {r r' : HomEq Γ p₂ p₃ p₀ p₁}
-  --           -- -> r ≡ r' -- HomEq² is a proposition
-  --           -> {k₀ k₀' : IxHom A p₂ x x'}
-  --           -> {rk₀ : HomEq Γ {!!} {!!} p₂ p₂}
-  --           -> IxHomEq rk₀ {!!} {!!} k₀ k₀'
-  --           -> {k₁ k₁' : IxHom A _ _ _}
-  --           -> {rk₁ : HomEq Γ {!!} {!!} p₃ p₃}
-  --           -> IxHomEq rk₁ {!!} {!!} k₁ k₁'
-  --           -> {q₀ q₀' : IxHom A p₀ x y}
-  --           -> {rq₀ : HomEq Γ {!!} {!!} p₀ p₀}
-  --           -> IxHomEq rq₀ {!!} {!!} q₀ q₀'
-  --           -> {q₁ q₁' : IxHom A p₁ x' y'}
-  --           -> {rq₁ : HomEq Γ {!!} {!!} p₁ p₁}
-  --           -> IxHomEq rq₁ {!!} {!!} q₁ q₁'
-  --           -> IxHomEq r k₀ k₁ q₀ q₁ ≡ IxHomEq r' k₀' k₁' q₀' q₁'
-  -- IxHomEq-≡ _ _ _ _ = {!!}
-
 _‣_ : (Γ : Con i) -> Ty j Γ -> Con (i ⊔ j)
 Γ ‣ A = record
   { ∣_∣ = Σ ∣ Γ ∣ λ γ → ∣ ∣ A ∣* γ ∣
@@ -210,6 +189,17 @@ _‣_ : (Γ : Con i) -> Ty j Γ -> Con (i ⊔ j)
   ; inv1 = λ { {p = p} → sp (inv1 Γ) (inv1* A (proj₂ p)) }
   ; inv2 = λ { {p = p} → sp (inv2 Γ) (inv2* A (proj₂ p)) }
   }
+
+module _ {Γ : Con i} {A : Ty j Γ} {γ₀ γ₀' γ₁ γ₁' a₀ a₀' a₁ a₁'}
+         {p₀ : Hom Γ γ₀ γ₀'} {p₁ : Hom Γ γ₁ γ₁'}
+         {k₀ : Hom Γ γ₀ γ₁} {k₁ : Hom Γ γ₀' γ₁'}
+         {q₀ : IxHom A p₀ a₀ a₀'} {q₁ : IxHom A p₁ a₁ a₁'}
+         {f₀ : IxHom A k₀ a₀ a₁} {f₁ : IxHom A k₁ a₀' a₁'}
+         where
+
+  HomEq‣ : HomEq (Γ ‣ A) (k₀ , f₀) (k₁ , f₁) (p₀ , q₀) (p₁ , q₁)
+         ≡ ΣP (HomEq Γ k₀ k₁ p₀ p₁) λ r → IxHomEq A r f₀ f₁ q₀ q₁
+  HomEq‣ = {!!} -- refl (HomEq (Γ ‣ A) (k₀ , f₀) (k₁ , f₁) (p₀ , q₀) (p₁ , q₁))
 
 module _ {Γ : Con i} (A : Ty j Γ) where
 

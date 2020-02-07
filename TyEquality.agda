@@ -55,7 +55,7 @@ module _ (Γ : Con i) (A : Ty j Γ) (ρ₀ ρ₁ : Ω ⟶ Γ) (γ₀ γ₁ : Δ 
     ; tm1 = λ {γ} {γ'} h →
         let goal : IxHomEq A _ (tm1 a₀ (tm0 p γ)) (tm1 a₁ (tm0 p γ)) (tm0 q₀ γ) (tm0 q₁ γ)
                  ≡ IxHomEq A _ (tm1 a₀ (tm0 p γ')) (tm1 a₁ (tm0 p γ')) (tm0 q₀ γ') (tm0 q₁ γ')
-            goal = {!!} -- IxHomEq-≡ A {!!} {!!} {!!} {!!}
+            goal = {!!} -- IxHomEq-≡ A {!!} {!!} {!!} (unlift (tm1 q₁ h))
         in lift goal
     ; tm-refl = tt
     ; tm-trans = tt
@@ -70,8 +70,21 @@ module _ {Γ : Con i} {Δ : Con k} (A : Ty j Γ) (γ₀ γ₁ : Δ ⟶ Γ)
          where
 
   IxSetEq~* : IxSetEq ((A ~*) γ₀ γ₁ p a₀ a₁) q t₀ t₁
-            ≡ IxHomEq A {!!} {!!} {!!} t₀ t₁
-  IxSetEq~* = {!!}
+            ≡ IxHomEq A (unlift (tm1 p q)) (tm1 a₀ q) (tm1 a₁ q) t₀ t₁
+  IxSetEq~* = refl (IxSetEq ((A ~*) γ₀ γ₁ p a₀ a₁) q t₀ t₁)
+
+module _ (A : Ty j Γ) {γ₀ γ₁ γ₀' γ₁' a₀ a₁}
+         {p : Hom Γ γ₀ γ₁} {p₀ : Hom Γ γ₀' γ₀} {p₁ : Hom Γ γ₁' γ₁}
+         {k₀ : Hom Γ γ₀' γ₁'} {k₁ : Hom Γ γ₀ γ₁}
+         {j₀ : IxHom A k₀ a₀ a₁} {j₁ : IxHom A k₁ (f0 (subst* A p₀) a₀) (f0 (subst* A p₁) a₁)}
+         {r : HomEq Γ k₀ k₁ p₀ p₁}
+         where
+
+  IxHomEq-R : IxHom A p (f0 (subst* A p₀) a₀) (f0 (subst* A p₁) a₁)
+      -> IxHomEq A r j₀ j₁
+                 (R (∣ A ∣* _) (f0 (subst* A p₀) a₀))
+                 (R (∣ A ∣* _) (f0 (subst* A p₁) a₁))
+  IxHomEq-R m = {!!}
 
 module _ {Γ : Con i} {Δ : Con k} (A : Ty j Γ) (γ₀ γ₁ : Δ ⟶ Γ)
          (p : Tm Δ (El-set ((Γ ~) γ₀ γ₁)))
@@ -81,11 +94,10 @@ module _ {Γ : Con i} {Δ : Con k} (A : Ty j Γ) (γ₀ γ₁ : Δ ⟶ Γ)
   coh~ = record
     { tm0 = λ δ → R (∣ A ∣* (f0 γ₁ δ)) _
     ; tm1 = λ {δ} {δ'} q →
-        let goal :
-                   IxSetEq ((A ~*) γ₀ γ₁ p a (coe~ A γ₀ γ₁ p a)) q
+        let goal : IxHomEq A (unlift (tm1 p q)) (tm1 a q) (tm1 (coe~ A γ₀ γ₁ p a) q)
                          (R (∣ A ∣* (f0 γ₁ δ)) (f0 (subst* A (tm0 p δ)) (tm0 a δ)))
                          (R (∣ A ∣* (f0 γ₁ δ')) (f0 (subst* A (tm0 p δ')) (tm0 a δ')))
-            goal = {!!}
+            goal = IxHomEq-R A (subst*-eq A (unlift (tm1 p q)) (tm1 a q))
         in lift goal
     ; tm-refl = tt
     ; tm-trans = tt
