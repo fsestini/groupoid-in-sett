@@ -143,14 +143,19 @@ module _ (G : Groupoid i) {x y z : ∣ G ∣} {p : Hom G x y} {q : Hom G y z} wh
         _ ≡⟨ inv1 G ⟩
         _ ∎
 
+record GroupoidEq {i} (G H : Groupoid i) : Prop (lsuc i) where
+  no-eta-equality
+  field
+    eq1 : ∣ G ∣ ≡ ∣ H ∣
+    eq2 : HEq (λ X → X -> X -> Set i) eq1 (Hom G) (Hom H)
+    eq3 : HEq {I = Σ (Set i) (λ X → X → X → Set i)}
+            (λ { (X , Rel) → ∀ {x1} {x2} {x3} → Rel x1 x2 → Rel x2 x3 → Rel x1 x3})
+            {∣ G ∣ , Hom G} {∣ H ∣ , Hom H} (sp eq1 eq2) (T G) (T H)
+
 postulate
   Groupoid≡ : {i : Level} {G H : Groupoid i}
       -> _≡_ {A = Groupoid i} G H
-       ⇒ ΣP (∣ G ∣ ≡ ∣ H ∣) λ eq1
-       → ΣP (HEq (λ X → X -> X -> Set i) eq1 (Hom G) (Hom H)) λ eq2
-       → HEq {I = Σ (Set i) (λ X → X -> X -> Set i)}
-             (λ { (X , Rel) → ∀{x1 x2 x3} -> Rel x1 x2 -> Rel x2 x3 -> Rel x1 x3 })
-             (sp eq1 eq2) (T G) (T H)
+       ⇒ GroupoidEq G H
 {-# REWRITE Groupoid≡ #-}
 
 variable Γ Δ Ω ∇ : Con i

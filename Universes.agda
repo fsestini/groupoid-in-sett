@@ -56,9 +56,9 @@ const-ty G = record
   ; subst* = λ x →
       record { f0 = λ x → x ; f1 = λ x → x ; f-R = refl (R G _) ; f-T = λ _ _ → refl (T G _ _) }
   ; refl*0 = refl
-  ; refl*1 = λ p → refl' {A = (λ _ → Hom G _ _)} p
+  ; refl*1 = λ p → refl p
   ; trans*0 = λ _ _ → refl
-  ; trans*1 = λ p q r → refl' {A = (λ _ → Hom G _ _)} _
+  ; trans*1 = λ p q r → refl _
   }
 
 Set-ty : (j : Level) -> Ty (lsuc j) Γ
@@ -77,18 +77,10 @@ Set-ty j = const-ty (record
   ; id2 = λ { {p = p} → refl p }
   ; assoc = λ { {p = p} {q} {r} → refl (iso-T (iso-T p q) r) }
   ; inv1 = λ { {x = A} {p = p} -> let open Eq-Reasoning A in
-      sp' (λ q → ≡-to-HEq (tr (prf1 p _) q)) (λ q → ≡-to-HEq (tr (prf1 p _) q)) }
+      sp' (λ q → tr (prf1 p _) q) (λ q → tr (prf1 p _) q) }
   ; inv2 = λ { {x = A} {B} {p = p} -> let open Eq-Reasoning B in
-      sp' (λ q → ≡-to-HEq (tr (prf2 p _) q)) (λ q → ≡-to-HEq (tr (prf2 p _) q)) }
+      sp' (λ q → tr (prf2 p _) q) (λ q → tr (prf2 p _) q) }
   })
-
-module _ {Γ : Con i} {γ γ' : ∣ Γ ∣} {p : Hom Γ γ γ'} {A B : Set j} where
-
-  IxHom-Set-ty : IxHom (Set-ty {Γ = Γ} j) p A B ≡ Iso A B
-  IxHom-Set-ty = refl (Iso A B)
-
-Set[] : (σ : Δ ⟶ Γ) -> (Set-ty j [ σ ]) ≡ Set-ty j
-Set[] {j = j} σ = refl (Set-ty j [ σ ])
 
 discrete : Set j -> Groupoid j
 discrete S = record
@@ -134,23 +126,12 @@ module _ (A : Tm Γ (Set-ty j)) where
   IxSetEq : ∀{γ γ'} -> Hom Γ γ γ' -> tm0 A γ → tm0 A γ' → Prop j
   IxSetEq p x y = iso1 (tm1 A p) x ≡ y
 
-module _ {A : Tm Γ (Set-ty j)} {γ₀ γ₁} {p : Hom Γ γ₀ γ₁}
-         {a₀ : tm0 A γ₀} {a₁ : tm0 A γ₁} where
-
-  IxHomEl : IxHom (El-set A) p a₀ a₁ ≡ Lift (IxSetEq A p a₀ a₁)
-  IxHomEl = refl (IxHom (El-set A) p a₀ a₁)
-
-module _ {Γ : Con i} {A : Tm Γ (Set-ty j)} (σ : Δ ⟶ Γ) where
-
-  El[] : ((El-set A) [ σ ]) ≡ El-set (A [ σ ]')
-  El[] = refl ((El-set A) [ σ ])
-
 Prop-set : (j : Level) -> Tm Γ (Set-ty (lsuc j))
 Prop-set j = record
   { tm0 = λ γ → Prop j
   ; tm1 = λ _ → iso-R
   ; tm-refl = refl iso-R
-  ; tm-trans = {!!}
+  ; tm-trans = sp' {!!} {!!}
   }
 
 -- module _ {Γ : Con i} (A : Tm Γ (El-set (Prop-set j))) where
@@ -160,9 +141,6 @@ Prop-set j = record
 --   IxPropEq {γ = γ} {γ'} p x y = {!!} -- coe fst (tm1 A p) x ≡ y
 
 
-Prop[] : ∀{j} (σ : Δ ⟶ Γ) -> ((Prop-set j) [ σ ]') ≡ Prop-set j
-Prop[] {j = j} σ = refl ((Prop-set j) [ σ ]')
-
 El-prop-into-set : Tm Γ (El-set (Prop-set j)) -> Tm Γ (Set-ty j)
 El-prop-into-set M = record
   { tm0 = λ γ → Lift (tm0 M γ)
@@ -171,27 +149,9 @@ El-prop-into-set M = record
   ; tm-refl = refl iso-R
   ; tm-trans = {!!}
   }
-
-module _ {Γ : Con i} {γ γ'} (m : Hom Γ γ γ') {P Q : Prop j} where
-
-  IxSetProp : IxSetEq (Prop-set {Γ = Γ} j) m P Q ≡ ΣP' (P → Q) (λ _ → Q → P)
-  IxSetProp = refl (IxSetEq (Prop-set {Γ = Γ} j) m P Q)
-
--- module _ {Γ : Con i} (P : Tm Γ (El-set (Prop-set j)))
---          {γ γ'} (m : Hom Γ γ γ') {x y} where
-  
---   IxHomProp : IxSetEq (El-prop-into-set P) m (lift x) (lift y) ≡ {!!}
---     -- IxHom (El-prop P) m x y ≡ IxPropEq P m x y
---   IxHomProp = {!!}
-
-module _ {Γ : Con i} {A : Tm Γ (El-set (Prop-set j))} (σ : Δ ⟶ Γ) where
-
-  Elp[] : ((El-prop-into-set A) [ σ ]') ≡ El-prop-into-set (A [ σ ]')
-  Elp[] = refl ((El-prop-into-set A) [ σ ]')
   
 El-prop : Tm Γ (El-set (Prop-set j)) -> Ty j Γ
 El-prop M = El-set (El-prop-into-set M)
-
 
 module _ {Γ : Con i} {A : Ty j Γ} (t : Tm (Γ ‣ A) (Set-ty k)) where
 

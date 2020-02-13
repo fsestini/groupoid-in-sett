@@ -34,7 +34,7 @@ module _ {Γ : Con i} {Δ : Con k} (A : Ty j Γ) (γ₀ γ₁ : Δ ⟶ Γ) where
       -> Tm Δ (A [ γ₀ ]) -> Tm Δ (A [ γ₁ ]) -> Tm Δ (Set-ty j)
   _~* p a₀ a₁ = set-curry (_~*' a₀ a₁) p
 
-module _ (Γ : Con i) (A : Ty j Γ) (ρ₀ ρ₁ : Ω ⟶ Γ) (γ₀ γ₁ : Δ ⟶ Ω)
+module _ {Γ : Con i} (A : Ty j Γ) (ρ₀ ρ₁ : Ω ⟶ Γ) (γ₀ γ₁ : Δ ⟶ Ω)
          (p : Tm Δ (El-set ((Ω ~) γ₀ γ₁)))
          (p₀ : Tm Δ (El-set ((Γ ~) (comp-fun γ₀ ρ₀) (comp-fun γ₀ ρ₁))))
          (p₁ : Tm Δ (El-set ((Γ ~) (comp-fun γ₁ ρ₀) (comp-fun γ₁ ρ₁))))
@@ -61,30 +61,26 @@ module _ (Γ : Con i) (A : Ty j Γ) (ρ₀ ρ₁ : Ω ⟶ Γ) (γ₀ γ₁ : Δ 
     ; tm-trans = tt
     }
 
-module _ {Γ : Con i} {Δ : Con k} (A : Ty j Γ) (γ₀ γ₁ : Δ ⟶ Γ)
-         (p : Tm Δ (El-set ((Γ ~) γ₀ γ₁)))
-         (a₀ : Tm Δ (A [ γ₀ ])) (a₁ : Tm Δ (A [ γ₁ ]))
-         {δ₀ δ₁} (q : Hom Δ δ₀ δ₁)
-         (t₀ : tm0 ((A ~*) γ₀ γ₁ p a₀ a₁) δ₀)
-         (t₁ : tm0 ((A ~*) γ₀ γ₁ p a₀ a₁) δ₁)
+module _ {Γ : Con i} {Ω : Con k} {Δ : Con l}
+         (A : Ty j Γ)
+         (ρ₀ ρ₁ : Ω ⟶ Γ) (γ₀ γ₁ : Δ ⟶ Ω)
+         {a₀ : Tm Ω (A [ ρ₀ ])}
+         {a₁ : Tm Ω (A [ ρ₁ ])}
          where
 
-  IxSetEq~* : IxSetEq ((A ~*) γ₀ γ₁ p a₀ a₁) q t₀ t₁
-            ≡ IxHomEq A (unlift (tm1 p q)) (tm1 a₀ q) (tm1 a₁ q) t₀ t₁
-  IxSetEq~* = refl (IxSetEq ((A ~*) γ₀ γ₁ p a₀ a₁) q t₀ t₁)
-
-module _ (A : Ty j Γ) {γ₀ γ₁ γ₀' γ₁' a₀ a₁}
-         {p : Hom Γ γ₀ γ₁} {p₀ : Hom Γ γ₀' γ₀} {p₁ : Hom Γ γ₁' γ₁}
-         {k₀ : Hom Γ γ₀' γ₁'} {k₁ : Hom Γ γ₀ γ₁}
-         {j₀ : IxHom A k₀ a₀ a₁} {j₁ : IxHom A k₁ (f0 (subst* A p₀) a₀) (f0 (subst* A p₁) a₁)}
-         {r : HomEq Γ k₀ k₁ p₀ p₁}
-         where
-
-  IxHomEq-R : IxHom A p (f0 (subst* A p₀) a₀) (f0 (subst* A p₁) a₁)
-      -> IxHomEq A r j₀ j₁
-                 (R (∣ A ∣* _) (f0 (subst* A p₀) a₀))
-                 (R (∣ A ∣* _) (f0 (subst* A p₁) a₁))
-  IxHomEq-R m = {!!}
+  ~*cong : (p : Tm Ω (El-set ((Γ ~) ρ₀ ρ₁)))
+           (q : Tm Δ (El-set ((Ω ~) γ₀ γ₁)))
+           (t : Tm Ω (El-set ((A ~*) ρ₀ ρ₁ p a₀ a₁)))
+        -> Tm Δ (El-prop (
+              (A ~~*) ρ₀ ρ₁ γ₀ γ₁ q
+              (p [ γ₀ ]') (p [ γ₁ ]') (~cong ρ₀ ρ₁ γ₀ γ₁ p q) a₀ a₁
+              (t [ γ₀ ]') (t [ γ₁ ]')))
+  ~*cong p q t = record
+    { tm0 = λ δ → tm1 t (tm0 q _)
+    ; tm1 = λ _ → lift tt
+    ; tm-refl = tt
+    ; tm-trans = tt
+    }
 
 module _ {Γ : Con i} {Δ : Con k} (A : Ty j Γ) (γ₀ γ₁ : Δ ⟶ Γ)
          (p : Tm Δ (El-set ((Γ ~) γ₀ γ₁)))

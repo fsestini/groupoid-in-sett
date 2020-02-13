@@ -11,6 +11,7 @@ open import Equality
 open import Groupoid
 
 record Ty (j : Level) {i} (Γ : Con i) : Set (i ⊔ lsuc j) where
+  no-eta-equality
   field
     ∣_∣* : ∣ Γ ∣ -> Groupoid j
     subst* : ∀{x y} -> Hom Γ x y -> ∣_∣* x ⟶ ∣_∣* y
@@ -18,14 +19,13 @@ record Ty (j : Level) {i} (Γ : Con i) : Set (i ⊔ lsuc j) where
     refl*0 : ∀{γ} x -> f0 (subst* (R Γ γ)) x ≡ x
     refl*1 : ∀{γ x y} (p : Hom (∣_∣* γ) x y)
            → HEq (λ w → Hom ∣ γ ∣* (proj₁ w) (proj₂ w))
-                 (sp (refl*0 x) (Eq-to-HEq {A = ∣ ∣ γ ∣* ∣} (refl*0 y)))
+                 (sp (refl*0 x) (refl*0 y))
                  (f1 (subst* (R Γ γ)) p) p
-
     trans*0 : ∀{x y z} (p : Hom Γ x y) (q : Hom Γ y z) a
             -> f0 (subst* (T Γ p q)) a ≡ f0 (subst* q) (f0 (subst* p) a)
     trans*1 : ∀{x y z} (p : Hom Γ x y) (q : Hom Γ y z) {a b} (r : Hom ∣ x ∣* a b)
             -> HEq (λ w → Hom ∣ z ∣* (proj₁ w) (proj₂ w))
-                   (sp (trans*0 _ _ _) (Eq-to-HEq {A = ∣ ∣ z ∣* ∣} (trans*0 _ _ _)))
+                   (sp (trans*0 _ _ _) (trans*0 _ _ _))
                    (f1 (subst* (T Γ p q)) {a} {b} r) (f1 (subst* q) (f1 (subst* p) r))
 open Ty public
 
@@ -64,8 +64,11 @@ module _ {Γ : Con i} (A : Ty j Γ) where
   postulate
     IxT : ∀{x y z x' y' z'} {p : Hom Γ x y} {q : Hom Γ y z}
           -> IxHom p x' y' -> IxHom q y' z' -> IxHom (T Γ p q) x' z'
-  -- IxT {x} {y} {z} {x'} {p = p} {q} p' q' =
-    -- {!!} -- T (∣ A ∣* z) (coe (λ z → Hom (∣ A ∣* _) z (f0 (subst* A q) _)) eq (f1 (subst* A q) p')) q'
+    -- IxT {x} {y} {z} {x'} {p = p} {q} p' q' =
+    --   T (∣ A ∣* z)
+    --   {!!} -- (coe (λ z → Hom (∣ A ∣* _) z (f0 (subst* A q) _))
+    --   --   {!!} (f1 (subst* A q) p'))
+    --   q'
     -- where
     --   -- actual definition crashes Agda for some reason :/
     --   postulate eq : f0 (subst* A q) (f0 (subst* A p) x') ≡ f0 (subst* A (T Γ p q)) x'
@@ -74,7 +77,8 @@ module _ {Γ : Con i} (A : Ty j Γ) where
 
   id1* : ∀{γ γ' x y} {p : Hom Γ γ γ'} (q : IxHom p x y)
        -> HEq (λ z -> IxHom z x y) (id1 Γ) (IxT q (IxR y)) q
-  id1* {γ = γ} {γ'} {x} {y} q = {!id1 (∣ A ∣* _) {p = q}!}
+  id1* {γ = γ} {γ'} {x} {y} q = {!!}
+    -- {!id1 (∣ A ∣* _) {p = q}!}
     where
       aux : HEq (λ z -> IxHom z x y) (id1 Γ) (IxT q (IxR y)) (T (∣ A ∣* γ') q (R (∣ A ∣* γ') y))
       aux = {!refl*1 A q!}
@@ -123,6 +127,12 @@ module _ {Γ : Con i} (A : Ty j Γ)
       aux-eq' = tr (sy (trans*0 A _ _ a₀)) (cong (λ z → f0 (subst* A z) a₀) aux-eq)
       m = coe (λ z → Hom (∣ A ∣* _) z (f0 (subst* A k₀) a₀))
               (sy aux-eq') (R (∣ A ∣* _) (f0 (subst* A k₀) a₀))
+
+module _ {Γ : Con i} (A : Ty j Γ) {γ a₀ a₁} where
+
+  Hom-to-IxHom : Hom (∣ A ∣* γ) a₀ a₁ -> IxHom A (R Γ _) a₀ a₁
+  Hom-to-IxHom p =
+    coe (λ z → Hom (∣ A ∣* _) z _) (sym {A = ∣ ∣ A ∣* _ ∣} (refl*0 A a₀)) p
 
 module _ {Γ : Con i} (A : Ty j Γ) where
 
@@ -176,6 +186,33 @@ module _ {Γ : Con i} (A : Ty j Γ) where
     IxHomEq-≡ : IxHomEq r k₀ k₁ q₀ q₁ ≡ IxHomEq r' k₀' k₁' q₀' q₁'
     IxHomEq-≡ = {!!}
 
+module _ (A : Ty j Γ) {γ₀ γ₁ γ₀' γ₁' a₀ a₁}
+         {p : Hom Γ γ₀ γ₁} {p₀ : Hom Γ γ₀' γ₀} {p₁ : Hom Γ γ₁' γ₁}
+         {k₀ : Hom Γ γ₀' γ₁'} {k₁ : Hom Γ γ₀ γ₁}
+         {j₀ : IxHom A k₀ a₀ a₁} {j₁ : IxHom A k₁ (f0 (subst* A p₀) a₀) (f0 (subst* A p₁) a₁)}
+         {r : HomEq Γ k₀ k₁ p₀ p₁}
+         where
+
+  IxHomEq-R : IxHom A p (f0 (subst* A p₀) a₀) (f0 (subst* A p₁) a₁)
+            -> IxHomEq A r j₀ j₁
+                       (R (∣ A ∣* _) (f0 (subst* A p₀) a₀))
+                       (R (∣ A ∣* _) (f0 (subst* A p₁) a₁))
+  IxHomEq-R m = {!m!}
+
+module _ (A : Ty j Γ) {γ₀ γ₁ γ₀' γ₁' a₀ a₁}
+         {p : Hom Γ γ₀ γ₁}
+         -- {p₀ : Hom Γ γ₀' γ₀} {p₁ : Hom Γ γ₁' γ₁}
+         -- {k₀ : Hom Γ γ₀' γ₁'} {k₁ : Hom Γ γ₀ γ₁}
+         -- {j₀ : IxHom A k₀ a₀ a₁} {j₁ : IxHom A k₁ (f0 (subst* A p₀) a₀) (f0 (subst* A p₁) a₁)}
+         -- {r : HomEq Γ k₀ k₁ p₀ p₁}
+         where
+
+  IxHomEq-R' : IxHom A p a₀ a₁
+            -> IxHomEq A {!!} {!!} {!!}
+                       {!R (∣ A ∣* _) ?!}
+                       (R (∣ A ∣* _) {!!})
+  IxHomEq-R' m = {!m!}
+
 _‣_ : (Γ : Con i) -> Ty j Γ -> Con (i ⊔ j)
 Γ ‣ A = record
   { ∣_∣ = Σ ∣ Γ ∣ λ γ → ∣ ∣ A ∣* γ ∣
@@ -199,7 +236,7 @@ module _ {Γ : Con i} {A : Ty j Γ} {γ₀ γ₀' γ₁ γ₁' a₀ a₀' a₁ a
 
   HomEq‣ : HomEq (Γ ‣ A) (k₀ , f₀) (k₁ , f₁) (p₀ , q₀) (p₁ , q₁)
          ≡ ΣP (HomEq Γ k₀ k₁ p₀ p₁) λ r → IxHomEq A r f₀ f₁ q₀ q₁
-  HomEq‣ = {!!} -- refl (HomEq (Γ ‣ A) (k₀ , f₀) (k₁ , f₁) (p₀ , q₀) (p₁ , q₁))
+  HomEq‣ = refl (HomEq (Γ ‣ A) (k₀ , f₀) (k₁ , f₁) (p₀ , q₀) (p₁ , q₁))
 
 module _ {Γ : Con i} (A : Ty j Γ) where
 

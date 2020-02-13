@@ -24,16 +24,10 @@ _[_] {Δ = Δ} A σ = record
   ; trans*1 = λ p q r → {!!} -- trans*1' A _ _ _ (sym (f-T σ _ _))
   }
 
-[id] : (A : Ty j Γ) -> (A [ id-fun Γ ]) ≡ A
-[id] A = refl A
-
 wk : (A : Ty j Γ) -> (Γ ‣ A) ⟶ Γ
 wk {Γ = Γ} A =
   record { f0 = proj₁ ; f1 = proj₁
          ; f-R = refl (R Γ _) ; f-T = λ p q → refl (T Γ _ _) }
-
-[][] : (A : Ty j Γ) (σ : Δ ⟶ Γ) (γ : ∇ ⟶ Δ) -> (A [ σ ] [ γ ]) ≡ (A [ comp-fun γ σ ])
-[][] A σ γ = refl ((A [ σ ]) [ γ ])
 
 module _ {A : Ty j Γ} where 
 
@@ -68,33 +62,13 @@ module _ {A : Ty j Γ} where
        --        {!!})) }
     }
 
-module _ {A P : Ty j Γ} {p : Tm Γ P} {a : Tm Γ A} where
+wk-ty : (A : Ty k Γ) -> Ty j Γ -> Ty j (Γ ‣ A)
+wk-ty A B = B [ wk A ]
 
-  foo : (p [ wk A ]' [ ext (id-fun Γ) a ]') ≡ p
-  foo = refl p
+wk-tm : (A : Ty k Γ) {B : Ty j Γ} -> Tm Γ B -> Tm (Γ ‣ A) (wk-ty A B)
+wk-tm A t = t [ wk A ]'
 
-module _ {A : Ty j Γ} where
-  [][]' : (t : Tm Γ A) (σ : Δ ⟶ Γ) (γ : ∇ ⟶ Δ)
-        -> HEq (Tm ∇) ([][] A σ γ) ((t [ σ ]') [ γ ]') (t [ comp-fun γ σ ]')
-  [][]' {∇ = ∇} t σ γ = refl' {A = Tm ∇} ((t [ σ ]') [ γ ]')
-
-
-module _ {A : Ty j Γ} {σ : Δ ⟶ Γ} {γ γ' : _} {p : Hom Δ γ γ'}
-         {a : ∣ ∣ A ∣* (f0 σ γ) ∣} {a' : ∣ ∣ A ∣* (f0 σ γ') ∣} where
-
-  IxHom[] : IxHom (A [ σ ]) p a a' ≡ IxHom A (f1 σ p) a a'
-  IxHom[] = refl (IxHom (A [ σ ]) p a a')
-
--- module _ {A : Ty j Γ} {σ : Δ ⟶ Γ} {δ : _} {a : ∣ ∣ A ∣* (f0 σ δ) ∣ } where
-
---   uhmm : HEq (λ z → Hom (∣ A ∣* (f0 σ δ)) (f0 (subst* A z) a) a) (f-R σ)
---       (coe (λ z → Hom (∣ A ∣* (f0 σ δ)) z a) {!!} (R (∣ A ∣* (f0 σ δ)) a))
---       (coe (λ z → Hom (∣ A ∣* (f0 σ δ)) z a) {!!} (R (∣ A ∣* (f0 σ δ)) a))
---   uhmm = fromEq (λ z → Hom (∣ A ∣* (f0 σ δ)) (f0 (subst* A z) a) a) {!!}
-
---   IxR[] : HEq (λ z -> IxHom A z a a) (f-R σ) (IxR (A [ σ ]) a) (IxR A a)
---   IxR[] = uhmm
-
--- -- IxR (A [ σ ]) a : IxHom A (f1 σ (R Δ δ)) a a
--- -- IxR A a : IxHom A (R Γ (f0 σ δ)) a a
-
+var : (A : Ty j Γ) -> Tm (Γ ‣ A) (wk-ty A A)
+var A = record { tm0 = proj₂ ; tm1 = proj₂
+               ; tm-refl = refl (proj₂ (R (_ ‣ A) _))
+               ; tm-trans = {!!} }

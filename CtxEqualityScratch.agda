@@ -13,4 +13,3 @@ open import Universes
 
 open import CtxEquality
 
-
