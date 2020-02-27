@@ -13,22 +13,34 @@ open import Universes
 
 module _ (A : Ty j Γ) (B : Ty k (Γ ‣ A)) where
 
+  ff : ∀ γ → ∣ A ∣* γ ⟶ (Γ ‣ A)
+  ff γ = record
+    { f0 = γ ,_
+    ; f1 = λ x → R Γ γ , Hom-to-IxHom A x
+    ; f-R = {!!}
+    ; f-T = {!!}
+    }
+
   private
     B' : ∀ γ → Ty k (∣ A ∣* γ)
-    B' γ = record
-      { ∣_∣* = λ a → ∣ B ∣* (_ , a)
-      ; subst* = λ {x} {y} p →
-          subst* B (R Γ _ , coe (λ z → Hom (∣ A ∣* _) z _)
-                                (sym {A = ∣ ∣ A ∣* _ ∣} (refl*0 A x) ) p)
-      ; refl*0 = refl*0 B
-      ; refl*1 = refl*1 B
-      ; trans*0 = λ p q a →
-          let aux =
-               trans*0 B (R Γ _ , Hom-to-IxHom A p) (R Γ _ , (Hom-to-IxHom A q)) a
-              s = hom-sy Γ ; t = hom-tr Γ ; _∙_ = trans {A = ∣ ∣ B ∣* (γ , _) ∣}
-          in cong (λ x → f0 (subst* B x) a) (sp (s (id1 Γ)) {!!}) ∙ aux
-      ; trans*1 = {!!}
-      }
+    B' γ = B [ ff γ ]
+
+  -- private
+  --   B' : ∀ γ → Ty k (∣ A ∣* γ)
+  --   B' γ = record
+  --     { ∣_∣* = λ a → ∣ B ∣* (γ , a)
+  --     ; subst* = λ {x} {y} p →
+  --          subst* B (R Γ γ , coe (λ z → Hom (∣ A ∣* _) z _)
+  --                               (sym {A = ∣ ∣ A ∣* _ ∣} (refl*0 A x) ) p)
+  --     ; refl*0 = refl*0 B
+  --     ; refl*1 = refl*1 B
+  --     ; trans*0 = λ p q a →
+  --         let aux =
+  --              trans*0 B (R Γ _ , Hom-to-IxHom A p) (R Γ _ , (Hom-to-IxHom A q)) a
+  --             s = hom-sy Γ ; t = hom-tr Γ ; _∙_ = trans {A = ∣ ∣ B ∣* (γ , _) ∣}
+  --         in cong (λ x → f0 (subst* B x) a) (sp (s (id1 Γ)) {!!}) ∙ aux
+  --     ; trans*1 = {!!}
+  --     }
 
   Sigma : Ty _ Γ
   Sigma = record
