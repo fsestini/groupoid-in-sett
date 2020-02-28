@@ -30,7 +30,7 @@ open Lift public
 record ⊤ {i : Level} : Prop i where
   constructor tt
 
-record Top {i : Level} : Set i where
+record 𝟙 {i : Level} : Set i where
   constructor top
 
 record ΣP' {i j} (P : Prop i) (Q : P -> Prop j) : Prop (lsuc (i ⊔ j)) where

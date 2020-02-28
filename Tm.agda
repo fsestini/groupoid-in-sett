@@ -7,7 +7,7 @@ open import Agda.Builtin.Equality.Rewrite
 
 open import Data.Product
 open import Util
-open import Equality
+open import SetoidEquality hiding (R ; S ; T)
 open import Groupoid
 open import Ty
 
@@ -23,10 +23,10 @@ record Tm (Γ : Con i) (A : Ty j Γ) : Set (i ⊔ j) where
 open Tm public
 
 postulate
-  Tm≡ : {Γ : Con i} {A : Ty j Γ} {M N : Tm Γ A}
-      -> M ≡ N
+  Tm≡ : {Γ : Con i} {A : Ty j Γ} {M N : Tm Γ A} {Γ' : Set k} {x y : Γ'} {p : Eq Γ' x y}
+      -> HEq {Γ = Γ'} (λ _ -> Tm Γ A) p M N
      ⇒ ΣP (tm0 M ≡ tm0 N) λ eq1
-       → HEq {I = (γ : ∣ Γ ∣) -> ∣ ∣ A ∣* γ ∣}
+       → Het {A = (γ : ∣ Γ ∣) -> ∣ ∣ A ∣* γ ∣}
              (λ t0 → ∀{γ γ'} -> (p : Hom Γ γ γ') -> IxHom A p (t0 γ) (t0 γ'))
              eq1 (tm1 M) (tm1 N)
 {-# REWRITE Tm≡ #-}

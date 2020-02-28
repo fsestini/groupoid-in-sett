@@ -4,31 +4,31 @@ module Equations where
 
 open import Data.Product
 open import Util
-open import Equality
+open import SetoidEquality
 open import Groupoid
 open import Ty
 open import Tm
 open import Substitution
-open import Universes
-open import CtxEquality
-open import TyEquality
-open import Sigma
+-- open import Universes
+-- open import CtxEquality
+-- open import TyEquality
+-- open import Sigma
 
 module _ {A : Ty j Γ} {σ : Δ ⟶ Γ} {γ γ' : _} {p : Hom Δ γ γ'}
          {a : ∣ ∣ A ∣* (f0 σ γ) ∣} {a' : ∣ ∣ A ∣* (f0 σ γ') ∣} where
 
   IxHom[] : IxHom (A [ σ ]) p a a' ≡ IxHom A (f1 σ p) a a'
-  IxHom[] = refl (IxHom (A [ σ ]) p a a')
+  IxHom[] = refl _ {IxHom (A [ σ ]) p a a'}
 
 [id] : (A : Ty j Γ) -> (A [ id-fun Γ ]) ≡ A
-[id] A = refl A
+[id] A = refl _ {A}
 
 [][] : (A : Ty j Γ) (σ : Δ ⟶ Γ) (γ : ∇ ⟶ Δ) -> (A [ σ ] [ γ ]) ≡ (A [ comp-fun γ σ ])
-[][] A σ γ = refl ((A [ σ ]) [ γ ])
+[][] A σ γ = refl _ {(A [ σ ]) [ γ ]}
 
 []'[]' : {A : Ty j Γ} (t : Tm Γ A) (σ : Δ ⟶ Γ) (γ : ∇ ⟶ Δ)
        → (t [ σ ]' [ γ ]') ≡ (t [ comp-fun γ σ ]')
-[]'[]' t σ γ = refl ((t [ σ ]') [ γ ]')
+[]'[]' t σ γ = refl _ {(t [ σ ]') [ γ ]'}
 
 -- -- Universes
 

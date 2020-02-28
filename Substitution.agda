@@ -4,7 +4,7 @@ module Substitution where
 
 open import Data.Product
 open import Util
-open import Equality
+open import SetoidEquality hiding (R ; S ; T)
 open import Groupoid
 open import Ty
 open import Tm
@@ -14,11 +14,11 @@ _[_] {Δ = Δ} A σ = record
   { ∣_∣* = λ δ → ∣ A ∣* (f0 σ δ)
   ; subst* = λ p → subst* A (f1 σ p)
   ; refl*0 = λ x →
-      trans {A = ∣ ∣ A ∣* (f0 σ _) ∣}
+      trans (∣ ∣ A ∣* (f0 σ _) ∣)
             (cong (λ z -> f0 (subst* A z) x) (f-R σ)) (refl*0 A _)
   ; refl*1 = λ {γ x y} p → {!!} -- refl*1' A (sym (f-R σ))
-  ; trans*0 = λ p q a
-      → trans {A = ∣ ∣ A ∣* _ ∣}
+  ; trans*0 = λ p q a →
+      trans (∣ ∣ A ∣* _ ∣)
           (cong (λ z -> f0 (subst* A z) _) (f-T σ p q))
           (trans*0 A (f1 σ p) (f1 σ q) _)
   ; trans*1 = λ p q r → {!!} -- trans*1' A _ _ _ (sym (f-T σ _ _))
@@ -27,7 +27,7 @@ _[_] {Δ = Δ} A σ = record
 wk : (A : Ty j Γ) -> (Γ ‣ A) ⟶ Γ
 wk {Γ = Γ} A =
   record { f0 = proj₁ ; f1 = proj₁
-         ; f-R = refl (R Γ _) ; f-T = λ p q → refl (T Γ _ _) }
+         ; f-R = refl (Hom Γ _ _) ; f-T = λ p q → refl (Hom Γ _ _) }
 
 module _ {A : Ty j Γ} where 
 
@@ -70,5 +70,5 @@ wk-tm A t = t [ wk A ]'
 
 var : (A : Ty j Γ) -> Tm (Γ ‣ A) (wk-ty A A)
 var A = record { tm0 = proj₂ ; tm1 = proj₂
-               ; tm-refl = refl (proj₂ (R (_ ‣ A) _))
-               ; tm-trans = {!!} }
+               ; tm-refl = refl (IxHom A _ _ _)
+               ; tm-trans = refl (IxHom A _ _ _) }
