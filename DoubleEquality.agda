@@ -17,8 +17,6 @@ postulate
   hrefl : {I : Set i} (A : I -> Set j) {x : I} (a : A x) -> HEq A (refl x) a a
 
   coe : {I : Set i} (A : I -> Set j) {x y : I} (p : x ≡ y) -> A x -> A y
-  -- coh : {I : Set i} (A : I -> Set j) {x y : I} (p : x ≡ y) (a : A x)
-  --     -> HEq A p a (coe A p a)
 
   from-coe : {I : Set i} (A : I -> Set j) {x y : I} {p : x ≡ y} {a : A x} {b : A y}
            -> (coe A p a ≡ b) ⇒ HEq A p a b
@@ -53,10 +51,10 @@ hsym {Γ = Γ} A {γ₀} {γ₁} {p} {a₀} {a₁} q = unlift (aux (sym Γ p))
     eq = sp p q
     aux = coe {I = Σ Γ A} (λ { (γ , a) → (p' : γ ≡ γ₀) -> Lift (HEq A p' a a₀) }) eq (λ p' → lift (hrefl A _))
 
-HT : {Γ : Set i} (A : Γ -> Set j) {γ₀ γ₁ γ₂ : Γ} {p₀ : γ₀ ≡ γ₁} {p₁ : γ₁ ≡ γ₂}
+htrans : {Γ : Set i} (A : Γ -> Set j) {γ₀ γ₁ γ₂ : Γ} {p₀ : γ₀ ≡ γ₁} {p₁ : γ₁ ≡ γ₂}
      {a₀ : A γ₀} {a₁ : A γ₁} {a₂ : A γ₂}
    -> HEq A p₀ a₀ a₁ -> HEq A p₁ a₁ a₂ -> HEq A (trans Γ p₀ p₁) a₀ a₂
-HT {Γ = Γ} A {γ₀} {γ₁} {γ₂} {p₀} {p₁} {a₀} {a₁} {a₂} q₀ q₁ = unlift (aux (trans Γ p₀ p₁))
+htrans {Γ = Γ} A {γ₀} {γ₁} {γ₂} {p₀} {p₁} {a₀} {a₁} {a₂} q₀ q₁ = unlift (aux (trans Γ p₀ p₁))
   where
     aux = coe {I = Σ Γ A} (λ { (γ , a) → (p' : γ₀ ≡ γ) -> Lift (HEq A p' a₀ a) }) (sp p₁ q₁)
               (λ p' → lift q₀)
@@ -94,7 +92,13 @@ postulate
   HEq-Prop-⇒ : {Γ : Set i} {γ₀ γ₁ : Γ} {p : γ₀ ≡ γ₁} {P Q : Prop j}
              -> HEq {Γ = Γ} (λ _ -> Prop j) p P Q ⇒ ΣP' (P -> Q) λ _ → Q -> P
 
-{-# REWRITE coe-Σ coe-Π HEq-Π-⇒ HEq-Σ-⇒ HEq-Prf-⇒ HEq-Prop-⇒ #-}
+  HEq-const : {I : Set i} {A : Set j} {x y : I} {p : x ≡ y} {a b : A}
+            -> HEq {Γ = I} (λ _ → A) p a b ⇒ (a ≡ b)
+
+  HEq-refl : {I : Set i} {A : I -> Set j} {x : I} {a b : A x}
+           -> HEq A (refl x) a b ⇒ (a ≡ b)
+
+{-# REWRITE coe-Σ coe-Π HEq-Π-⇒ HEq-Σ-⇒ HEq-Prf-⇒ HEq-Prop-⇒ HEq-const #-}
 
 module _ {A : Set i} {B : A -> Set j} (f : (a : A) -> B a) where
 
@@ -104,4 +108,19 @@ module _ {A : Set i} {B : A -> Set j} (f : (a : A) -> B a) where
 module _ {A : Set i} {B : Set j} (f : A -> B) where
 
   cong : {x y : A} -> (p : x ≡ y) -> f x ≡ f y
-  cong p = {!dcong f p!}
+  cong p = dcong f p
+
+module _ {A : Set i} {B : A -> Set j} {C : (a : A) -> B a -> Set k}
+         {f : (a : A) (b : B a) -> C a b}
+         {g : A -> A -> A}
+         where
+
+  qwe : f ≡ f
+  qwe = refl f
+
+  qweqwe : g ≡ g
+  qweqwe = λ p q → refl g p q
+
+  testt : {x y : A} (p : x ≡ y) {b : B x} {b' : B y}
+        -> (coe B p b ≡ b') ≡ (HEq B p b b')
+  testt p = sp' (λ h → {!h!}) {!!}
