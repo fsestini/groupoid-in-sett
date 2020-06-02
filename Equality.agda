@@ -7,11 +7,6 @@ open import Agda.Builtin.Equality.Rewrite
 open import Data.Product
 open import Util
 
-private
-  postulate
-    R~ : (P : Prop i) -> P -> P -> Prop i
-    RR~ : {P : Prop i} (p : P) -> R~ P p p
-
 postulate
   _≡_ : {A : Set i} -> A -> A -> Prop i
 
@@ -63,9 +58,6 @@ module _ {A : Set i} {x : A} (C : (y : A) -> x ≡ y -> Prop j)
 
   J-Prop : {y : A} (p : x ≡ y) -> C y p
   J-Prop p = let aux = J C' (lift d) p in unlift aux
-
-  J-refl-Prop : R~ _ (J-Prop (refl x)) d
-  J-refl-Prop = RR~ _
 
 module _ {I : Set i} (A : I -> Set j)
          {x y : I} (p : x ≡ y) (a : A x) where

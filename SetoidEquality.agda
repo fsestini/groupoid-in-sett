@@ -1,7 +1,7 @@
 {-# OPTIONS --prop --rewriting --without-K #-}
 
 open import Data.Product
-open import Agda.Builtin.Equality renaming (_≡_ to _⇒_) hiding (refl)
+open import Agda.Builtin.Equality renaming (_≡_ to _⇒_ ; refl to reduce)
 open import Agda.Builtin.Equality.Rewrite
 open import Util
 
@@ -81,56 +81,63 @@ postulate
 
 {-# REWRITE coe-Σ coe-Π HEq-Π-⇒ HEq-Σ-⇒ HEq-Prf-⇒ HEq-Prop-⇒ #-}
 
-Id : (A : Set i) -> A -> A -> Prop i
-Id A = HEq {Γ = 𝟙 {lzero}} (λ _ → A) tt
+-- Id : (A : Set i) -> A -> A -> Prop i
+-- Id A = HEq {Γ = 𝟙 {lzero}} (λ _ → A) tt
 
-Id' : (A : Set i) -> A -> A -> Prop (lsuc i)
-Id' {i = i} A a b = {Γ : Set i} {x y : Γ} {p : Eq Γ x y} -> HEq {Γ = Γ} (λ _ → A) p a b
+Id : {I : Set i} (A : I -> Set j) {x : I} -> A x -> A x -> Prop j
+Id {I = I} A a b = HEq A (R I _) a b
 
-_≡_ : {A : Set i} -> A -> A -> Prop i
-_≡_ {A = A} = Id A
+-- foo : {I : Set i} (A : Set j) {x y : I} {a : A} {p : Eq I x y}
+--     -> HEq {Γ = I} (λ _ -> A) p a a ⇒ Id {I = I} (λ _ -> A) {x} a a
+-- foo A = reduce
 
-refl : (A : Set i) {a : A} -> a ≡ a
-refl A = HR (λ _ → A) _
+-- Id' : (A : Set i) -> A -> A -> Prop (lsuc i)
+-- Id' {i = i} A a b = {Γ : Set i} {x y : Γ} {p : Eq Γ x y} -> HEq {Γ = Γ} (λ _ → A) p a b
 
-sym : (A : Set i) {a a' : A} -> a ≡ a' -> a' ≡ a
-sym A p = HS (λ _ -> A) p
+-- _≡_ : {A : Set i} -> A -> A -> Prop i
+-- _≡_ {A = A} = Id A
 
-trans : (A : Set i) {a a' a'' : A} -> a ≡ a' -> a' ≡ a'' -> a ≡ a''
-trans A p q = HT (λ _ -> A) p q
+-- refl : (A : Set i) {a : A} -> a ≡ a
+-- refl A = HR (λ _ → A) _
 
-Het : {A : Set i} (B : A -> Set j) {x y : A}
-    -> x ≡ y -> B x -> B y -> Prop j
-Het {A = A} B p = HEq {Γ = Σ (𝟙 {lzero}) (λ _ → A)} (λ x → B (proj₂ x)) (sp tt p)
+-- sym : (A : Set i) {a a' : A} -> a ≡ a' -> a' ≡ a
+-- sym A p = HS (λ _ -> A) p
 
-module _ {A : Set i} (B : A -> Set j) where
+-- trans : (A : Set i) {a a' a'' : A} -> a ≡ a' -> a' ≡ a'' -> a ≡ a''
+-- trans A p q = HT (λ _ -> A) p q
 
-  hrefl : {a : A} {b : B a} -> Het B (refl A) b b
-  hrefl = HR (λ x → B (proj₂ x)) _
+-- Het : {A : Set i} (B : A -> Set j) {x y : A}
+--     -> x ≡ y -> B x -> B y -> Prop j
+-- Het {A = A} B p = HEq {Γ = Σ (𝟙 {lzero}) (λ _ → A)} (λ x → B (proj₂ x)) (sp tt p)
 
-  hsym : {γ₀ γ₁ : A} {p : γ₀ ≡ γ₁} {a₀ : B γ₀} {a₁ : B γ₁}
-       -> Het B p a₀ a₁ -> Het B (sym A p) a₁ a₀
-  hsym = HS (λ x -> B (proj₂ x))
+-- module _ {A : Set i} (B : A -> Set j) where
 
-  htrans : {γ₀ γ₁ γ₂ : A} {p₀ : γ₀ ≡ γ₁} {p₁ : γ₁ ≡ γ₂}
-           {a₀ : B γ₀} {a₁ : B γ₁} {a₂ : B γ₂}
-         -> Het B p₀ a₀ a₁ -> Het B p₁ a₁ a₂ -> Het B (trans A p₀ p₁) a₀ a₂
-  htrans = HT (λ x -> B (proj₂ x))
+--   hrefl : {a : A} {b : B a} -> Het B (refl A) b b
+--   hrefl = HR (λ x → B (proj₂ x)) _
 
-module _ (A : Set j) {a b : A} where
+--   hsym : {γ₀ γ₁ : A} {p : γ₀ ≡ γ₁} {a₀ : B γ₀} {a₁ : B γ₁}
+--        -> Het B p a₀ a₁ -> Het B (sym A p) a₁ a₀
+--   hsym = HS (λ x -> B (proj₂ x))
 
-  to-Id : Eq A a b -> a ≡ b
-  to-Id p = unlift aux
-    where
-      aux = coe (λ x → Lift (HEq (λ _ → A) tt a x)) p (lift (HR (λ _ -> A) _))
+--   htrans : {γ₀ γ₁ γ₂ : A} {p₀ : γ₀ ≡ γ₁} {p₁ : γ₁ ≡ γ₂}
+--            {a₀ : B γ₀} {a₁ : B γ₁} {a₂ : B γ₂}
+--          -> Het B p₀ a₀ a₁ -> Het B p₁ a₁ a₂ -> Het B (trans A p₀ p₁) a₀ a₂
+--   htrans = HT (λ x -> B (proj₂ x))
 
-postulate
-  coe-Prf : {Γ : Set i} {P : Γ -> Prop j} {γ₀ γ₁ : Γ} {p : Eq Γ γ₀ γ₁} {x : P γ₀}
-          -> let aux : Id (Prop _) (P γ₀) (P γ₁)
-                 aux = refl (Γ -> Prop j) {P} (to-Id Γ p)
-             in coe (λ γ → Lift (P γ)) p (lift x) ⇒ lift (fst' aux x)
+-- module _ (A : Set j) {a b : A} where
 
-{-# REWRITE coe-Prf #-}
+--   to-Id : Eq A a b -> a ≡ b
+--   to-Id p = unlift aux
+--     where
+--       aux = coe (λ x → Lift (HEq (λ _ → A) tt a x)) p (lift (HR (λ _ -> A) _))
+
+-- postulate
+--   coe-Prf : {Γ : Set i} {P : Γ -> Prop j} {γ₀ γ₁ : Γ} {p : Eq Γ γ₀ γ₁} {x : P γ₀}
+--           -> let aux : Id (Prop _) (P γ₀) (P γ₁)
+--                  aux = refl (Γ -> Prop j) {P} (to-Id Γ p)
+--              in coe (λ γ → Lift (P γ)) p (lift x) ⇒ lift (fst' aux x)
+
+-- {-# REWRITE coe-Prf #-}
 
 module _ {Γ : Set i} {γ : Γ} (C : {γ' : Γ} -> Eq Γ γ γ' -> Set j)
          (d : C (R Γ γ))
@@ -147,17 +154,17 @@ module _ {Γ : Set i} (A : Γ -> Set j) {γ₀ : Γ} {a₀ : A γ₀}
   J-on-HEq : {γ₁ : Γ} (p : Eq Γ γ₀ γ₁) {a₁ : A γ₁} (q : HEq A p a₀ a₁) -> C p q
   J-on-HEq p q = J-on-Eq {Γ = Σ Γ A} (λ { (sp p q) → C p q}) d (sp p q)
 
-module _ {A : Set i} {γ : A} (C : (γ' : A) -> γ ≡ γ' -> Set j)
-         (d : C γ (refl A))
-  where
+-- module _ {A : Set i} {γ : A} (C : (γ' : A) -> γ ≡ γ' -> Set j)
+--          (d : C γ (refl A))
+--   where
 
-  J : {γ' : A} (p : γ ≡ γ') -> C γ' p
-  J = J-on-HEq {Γ = 𝟙 {lzero}} (λ _ → A) (λ _ → C _) d (R (𝟙 {lzero}) _)
+--   J : {γ' : A} (p : γ ≡ γ') -> C γ' p
+--   J = J-on-HEq {Γ = 𝟙 {lzero}} (λ _ → A) (λ _ → C _) d (R (𝟙 {lzero}) _)
 
-module _ {A : Set i} (B : A -> Set j) where
+-- module _ {A : Set i} (B : A -> Set j) where
 
-  transp : {x y : A} -> x ≡ y -> B x -> B y
-  transp p x = J (λ y _ → B y) x p
+--   transp : {x y : A} -> x ≡ y -> B x -> B y
+--   transp p x = J (λ y _ → B y) x p
 
 module _ {Γ : Set i} {Γ' : Set j} (A : Set k)
          {γ₀ γ₁ : Γ} {p : Eq Γ γ₀ γ₁}
@@ -169,41 +176,41 @@ module _ {Γ : Set i} {Γ' : Set j} (A : Set k)
       aux = J-on-HEq (λ _ -> A) (λ { {a₁ = a₁} p q → Lift (HEq {Γ = Γ'} (λ _ -> A) p' a₀ a₁) })
               (J-on-Eq {Γ = Γ'} (λ p' → Lift (HEq (λ _ → A) p' a₀ a₀)) (lift (HR (λ _ → A) a₀)) p') p q
 
-module _ {A : Set i} {B : Set j} (f : A -> B) where
+-- module _ {A : Set i} {B : Set j} (f : A -> B) where
 
-  private
-    cong' : {a₀ a₁ : A} (q : Id A a₀ a₁)
-         → HEq {Γ = Σ (𝟙 {lzero}) (λ _ -> A)} (λ { _ → B}) (sp tt q) (f a₀) (f a₁)
-    cong' q = refl (A -> B) {f} q
+--   private
+--     cong' : {a₀ a₁ : A} (q : Id A a₀ a₁)
+--          → HEq {Γ = Σ (𝟙 {lzero}) (λ _ -> A)} (λ { _ → B}) (sp tt q) (f a₀) (f a₁)
+--     cong' q = refl (A -> B) {f} q
 
-  cong : {a₀ a₁ : A} (q : Id A a₀ a₁) -> Id B (f a₀) (f a₁)
-  cong q = ctx-irrel B (cong' q) 
+--   cong : {a₀ a₁ : A} (q : Id A a₀ a₁) -> Id B (f a₀) (f a₁)
+--   cong q = ctx-irrel B (cong' q) 
 
-module Eq-Reasoning {a : Level} (A : Set a) where
+-- module Eq-Reasoning {a : Level} (A : Set a) where
 
-  infix  3 _∎
-  infixr 2 _≡⟨⟩_ step-≡ step-≡˘
-  infix  1 begin_
+--   infix  3 _∎
+--   infixr 2 _≡⟨⟩_ step-≡ step-≡˘
+--   infix  1 begin_
 
-  sy = sym A
-  tr = trans A
-  infixl 4 _∙_
-  _∙_ = tr
+--   sy = sym A
+--   tr = trans A
+--   infixl 4 _∙_
+--   _∙_ = tr
 
-  begin_ : ∀{x y : A} → x ≡ y → x ≡ y
-  begin_ x≡y = x≡y
+--   begin_ : ∀{x y : A} → x ≡ y → x ≡ y
+--   begin_ x≡y = x≡y
 
-  _≡⟨⟩_ : ∀ (x {y} : A) → x ≡ y → x ≡ y
-  _ ≡⟨⟩ x≡y = x≡y
+--   _≡⟨⟩_ : ∀ (x {y} : A) → x ≡ y → x ≡ y
+--   _ ≡⟨⟩ x≡y = x≡y
 
-  step-≡ : ∀ (x {y z} : A) → y ≡ z → x ≡ y → x ≡ z
-  step-≡ _ y≡z x≡y = trans A x≡y y≡z
+--   step-≡ : ∀ (x {y z} : A) → y ≡ z → x ≡ y → x ≡ z
+--   step-≡ _ y≡z x≡y = trans A x≡y y≡z
 
-  step-≡˘ : ∀ (x {y z} : A) → y ≡ z → y ≡ x → x ≡ z
-  step-≡˘ _ y≡z y≡x = trans A (sym A y≡x) y≡z
+--   step-≡˘ : ∀ (x {y z} : A) → y ≡ z → y ≡ x → x ≡ z
+--   step-≡˘ _ y≡z y≡x = trans A (sym A y≡x) y≡z
 
-  _∎ : ∀ (x : A) → x ≡ x
-  _∎ x = refl A
+--   _∎ : ∀ (x : A) → x ≡ x
+--   _∎ x = refl A
 
-  syntax step-≡  x y≡z x≡y = x ≡⟨  x≡y ⟩ y≡z
-  syntax step-≡˘ x y≡z y≡x = x ≡˘⟨ y≡x ⟩ y≡z
+--   syntax step-≡  x y≡z x≡y = x ≡⟨  x≡y ⟩ y≡z
+--   syntax step-≡˘ x y≡z y≡x = x ≡˘⟨ y≡x ⟩ y≡z
