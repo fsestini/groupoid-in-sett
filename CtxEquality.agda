@@ -2,9 +2,8 @@
 
 module CtxEquality where
 
-open import Data.Product
-open import Util
-open import Equality
+open import Lib
+open import SetoidEquality
 open import Groupoid
 open import Substitution
 open import Ty
@@ -42,7 +41,7 @@ _~ {Δ = Δ} Γ γ₀ γ₁ = record
              _ ∎
     }
   ; tm-refl = let open Eq-Reasoning (Hom Γ _ _) ; _∙_ = hom-tr Γ ; s = hom-sy Γ in
-       sp' (λ p → begin
+       _,p'_ (λ p → begin
                 _ ≡⟨ cong (λ z → T Γ (S Γ z) (T Γ _ _)) (f-R γ₀) ⟩
                 _ ≡⟨ cong (λ z → T Γ (S Γ _) (T Γ _ z)) (f-R γ₁) ⟩
                 _ ≡⟨ cong (T Γ (S Γ _)) (id1 Γ) ⟩
@@ -54,30 +53,30 @@ _~ {Δ = Δ} Γ γ₀ γ₁ = record
                 _ ≡⟨ cong (λ z → T Γ z (T Γ _ _)) (f-R γ₀) ∙ (id2 Γ ∙ (id1 Γ ∙ p)) ⟩
                 _ ∎)
 
-  ; tm-trans = {!!} -- Iso≡ (λ q → {!!}) {!!}
+  -- ; tm-trans = {!!} -- Iso≡ (λ q → {!!}) {!!}
   }
 
 R~ : ∀ (γ : Δ ⟶ Γ) -> Tm Δ (El-set ((Γ ~) γ γ))
 R~ {Γ = Γ} γ = record
   { tm0 = λ _ → R Γ _
   ; tm1 = λ p →
-      lift (trans {A = Hom Γ _ _} (cong (T Γ (S Γ (f1 γ p))) (id2 Γ)) (inv2 Γ))
-  ; tm-refl = tt
-  ; tm-trans = tt
+      prf (trans (Hom Γ _ _) (cong (T Γ (S Γ (f1 γ p))) (id2 Γ)) (inv2 Γ))
+  ; tm-refl = ttp
+--  ; tm-trans = ttp
   }
 
 S~ : ∀ (γ₀ γ₁ : Δ ⟶ Γ) -> Tm Δ (El-set ((Γ ~) γ₀ γ₁)) -> Tm Δ (El-set ((Γ ~) γ₁ γ₀))
 S~ {Γ = Γ} γ₀ γ₁ p = record
   { tm0 = λ δ → S Γ (tm0 p δ)
   ; tm1 = λ {δ1} {δ2} q →
-        let lift aux = tm1 p q
-            _∙_ = trans {A = Hom Γ _ _}
-            sy = sym {A = Hom Γ _ _}
+        let prf aux = tm1 p q
+            _∙_ = trans (Hom Γ _ _)
+            sy = sym (Hom Γ _ _)
             aux'' = sy (S-reverse Γ ∙ (cong (T Γ (S Γ (T Γ _ _))) (SS-id Γ)
                   ∙ (cong (λ z -> T Γ z _) (S-reverse Γ) ∙ sy (assoc Γ))))
-        in lift (aux'' ∙ cong (S Γ) aux)
-  ; tm-refl = tt
-  ; tm-trans = tt
+        in prf (aux'' ∙ cong (S Γ) aux)
+  ; tm-refl = ttp
+--  ; tm-trans = ttp
   }
 
 T~ : ∀ (γ₀ γ₁ γ₂ : Δ ⟶ Γ)
@@ -87,22 +86,22 @@ T~ : ∀ (γ₀ γ₁ γ₂ : Δ ⟶ Γ)
 T~ {Γ = Γ} γ₀ γ₁ γ₂ p q = record
   { tm0 = λ δ → T Γ (tm0 p δ) (tm0 q δ)
   ; tm1 = λ r →
-      let lift aux1 = tm1 p r
-          lift aux2 = tm1 q r
+      let prf aux1 = tm1 p r
+          prf aux2 = tm1 q r
           open Eq-Reasoning (Hom Γ _ _)
           goal = begin
-            _ ≡⟨ cong (T Γ _) (sym {A = Hom Γ _ _} (assoc Γ)) ⟩
-            _ ≡⟨ cong (T Γ _) (cong (T Γ _) (sym {A = Hom Γ _ _} (id2 Γ))) ⟩
-            _ ≡⟨ cong (λ z → T Γ (S Γ _) (T Γ _ (T Γ z (T Γ _ _)))) (sym {A = Hom Γ _ _} (inv1 Γ)) ⟩
-            _ ≡⟨ cong (T Γ _) (cong (T Γ _) (sym {A = Hom Γ _ _} (assoc Γ))) ⟩
+            _ ≡⟨ cong (T Γ _) (sym (Hom Γ _ _) (assoc Γ)) ⟩
+            _ ≡⟨ cong (T Γ _) (cong (T Γ _) (sym (Hom Γ _ _) (id2 Γ))) ⟩
+            _ ≡⟨ cong (λ z → T Γ (S Γ _) (T Γ _ (T Γ z (T Γ _ _)))) (sym (Hom Γ _ _) (inv1 Γ)) ⟩
+            _ ≡⟨ cong (T Γ _) (cong (T Γ _) (sym (Hom Γ _ _) (assoc Γ))) ⟩
             _ ≡⟨ cong (T Γ _) (assoc Γ) ⟩
             _ ≡⟨ assoc Γ ⟩
             _ ≡⟨ cong (λ z → T Γ z (T Γ _ (T Γ _ _))) aux1 ⟩
             _ ≡⟨ cong (T Γ _) aux2 ⟩
             _ ∎
-      in lift goal
-  ; tm-refl = tt
-  ; tm-trans = tt
+      in prf goal
+  ; tm-refl = ttp
+--  ; tm-trans = ttp
   }
 
 module _ {Δ : Con k} (Γ : Con i) (ρ₀ ρ₁ : Ω ⟶ Γ) (γ₀ γ₁ : Δ ⟶ Ω)
@@ -116,12 +115,12 @@ module _ {Δ : Con k} (Γ : Con i) (ρ₀ ρ₁ : Ω ⟶ Γ) (γ₀ γ₁ : Δ �
     { tm0 = λ δ →
         HomEq Γ (f1 ρ₀ (tm0 p δ)) (f1 ρ₁ (tm0 p δ)) (tm0 r₀ δ) (tm0 r₁ δ)
     ; tm1 = λ {δ} {δ'} q →
-        let qqq = reverse-HomEq Ω (unlift (tm1 p q))
+        let qqq = reverse-HomEq Ω (unprf (tm1 p q))
             hhh = congHomEq ρ₀ (HomEq-S-reverse Ω qqq)
-            eq = trans {A = Prop i} (cong (HomEq Γ _ _ _) (f-S ρ₀)) (cong (λ z → HomEq Γ _ _ z (S Γ _)) (f-S ρ₀))
-        in lift (HomEq-≡ Γ (unlift (tm1 r₀ q)) (unlift (tm1 r₁ q)) (congHomEq ρ₁ qqq) (fst' eq hhh))
-    ; tm-refl = tt
-    ; tm-trans = tt
+            eq = trans (Prop i) (cong (HomEq Γ _ _ _) (f-S ρ₀)) (cong (λ z → HomEq Γ _ _ z (S Γ _)) (f-S ρ₀))
+        in prf (HomEq-≡ Γ (unprf (tm1 r₀ q)) (unprf (tm1 r₁ q)) (congHomEq ρ₁ qqq) (fstp' eq hhh))
+    ; tm-refl = ttp
+    ; tm-trans = ttp
     }
 
 module _ {Δ : Con k} (Γ : Con i) (ρ : Ω ⟶ Γ) (γ : Δ ⟶ Ω)
@@ -132,12 +131,12 @@ module _ {Δ : Con k} (Γ : Con i) (ρ : Ω ⟶ Γ) (γ : Δ ⟶ Ω)
   R~~ = record
     { tm0 = λ δ →
         let aux = HomEq-R Γ (tm0 r δ)
-            eq = trans {A = Prop i} (cong (λ z → HomEq Γ (f1 ρ (R Ω _)) z _ _) (f-R ρ))
+            eq = trans (Prop i) (cong (λ z → HomEq Γ (f1 ρ (R Ω _)) z _ _) (f-R ρ))
                    (cong (λ z → HomEq Γ z (R Γ (f0 ρ _)) _ _) (f-R ρ))
-        in lift (snd' eq aux)
-    ; tm1 = λ _ → lift tt
-    ; tm-refl = tt
-    ; tm-trans = tt
+        in prf (sndp' eq aux)
+    ; tm1 = λ _ → prf ttp
+    ; tm-refl = ttp
+    ; tm-trans = ttp
     }
 
 module _ {Δ : Con k} (Γ : Con i) (ρ₀ ρ₁ : Ω ⟶ Γ) (γ₀ γ₁ : Δ ⟶ Ω)
@@ -150,15 +149,15 @@ module _ {Δ : Con k} (Γ : Con i) (ρ₀ ρ₁ : Ω ⟶ Γ) (γ₀ γ₁ : Δ �
   S~~ : Tm Δ (El-prop ((Γ ~~) ρ₀ ρ₁ γ₁ γ₀ (S~ γ₀ γ₁ p) r₁ r₀))
   S~~ = record
     { tm0 = λ δ →
-        let aux = HomEq-S Γ (unlift (tm0 eq δ))
+        let aux = HomEq-S Γ (unprf (tm0 eq δ))
             eq : HomEq Γ (S Γ (f1 ρ₀ (tm0 p δ))) (S Γ (f1 ρ₁ (tm0 p δ))) _ _
                ≡ HomEq Γ (f1 ρ₀ (S Ω (tm0 p δ))) (f1 ρ₁ (S Ω (tm0 p δ))) _ _
-            eq = trans {A = Prop i} (cong (λ z → HomEq Γ (S Γ _) z _ _) (sym {A = Hom Γ _ _} (f-S ρ₁)))
-                       (cong (λ z → HomEq Γ z (f1 ρ₁ (S Ω _)) _ _) (sym {A = Hom Γ _ _} (f-S ρ₀)))
-        in lift (fst' eq aux)
-    ; tm1 = λ _ → lift tt
-    ; tm-refl = tt
-    ; tm-trans = tt
+            eq = trans (Prop i) (cong (λ z → HomEq Γ (S Γ _) z _ _) (sym (Hom Γ _ _) (f-S ρ₁)))
+                       (cong (λ z → HomEq Γ z (f1 ρ₁ (S Ω _)) _ _) (sym (Hom Γ _ _) (f-S ρ₀)))
+        in prf (fstp' eq aux)
+    ; tm1 = λ _ → prf ttp
+    ; tm-refl = ttp
+    ; tm-trans = ttp
     }
 
 module _ (Γ : Con i) {ρ₀ ρ₁ : Δ ⟶ Γ} (p : Tm Δ (El-set ((Γ ~) ρ₀ ρ₁))) where
@@ -166,24 +165,24 @@ module _ (Γ : Con i) {ρ₀ ρ₁ : Δ ⟶ Γ} (p : Tm Δ (El-set ((Γ ~) ρ₀
   id1~~ : Tm Δ (El-prop ((Γ ~~) ρ₀ ρ₁ (id-fun Δ) (id-fun Δ) (R~ (id-fun Δ)) (T~ ρ₀ ρ₁ ρ₁ p (R~ ρ₁)) p))
   id1~~ = record
     { tm0 = λ δ →
-        lift (snd' (HomEq-eq12 Γ (f-R ρ₀) (f-R ρ₁))
-             (snd' (HomEq-eq34 Γ (id1 Γ) (refl (tm0 p δ)))
+        prf (sndp' (HomEq-eq12 Γ (f-R ρ₀) (f-R ρ₁))
+             (sndp' (HomEq-eq34 Γ (id1 Γ) (refl _ (tm0 p δ)))
              (HomEq-R Γ (tm0 p δ))))
-    ; tm1 = λ _ → lift tt
-    ; tm-refl = tt
-    ; tm-trans = tt
+    ; tm1 = λ _ → prf ttp
+    ; tm-refl = ttp
+--    ; tm-trans = tt
     }
 
   id2~~ : Tm Δ (El-prop ((Γ ~~) ρ₀ ρ₁ (id-fun Δ) (id-fun Δ) (R~ (id-fun Δ)) (T~ ρ₀ ρ₀ ρ₁ (R~ ρ₀) p) p))
   id2~~ = record
     { tm0 = λ δ → let tr = hom-tr Γ in
-        lift (snd' (HomEq-eq12 Γ (f-R ρ₀) (f-R ρ₁))
-             (snd' (HomEq-eq34 Γ (id2 Γ) (refl (tm0 p _)))
+        prf (sndp' (HomEq-eq12 Γ (f-R ρ₀) (f-R ρ₁))
+             (sndp' (HomEq-eq34 Γ (id2 Γ) (refl _ (tm0 p _)))
              (tr (cong (T Γ (S Γ _)) (id1 Γ))
              (tr (cong (λ z → T Γ z _) (S-id Γ)) (id2 Γ)))))
-    ; tm1 = λ _ → lift tt
-    ; tm-refl = tt
-    ; tm-trans = tt
+    ; tm1 = λ _ → prf ttp
+    ; tm-refl = ttp
+    ; tm-trans = ttp
     }
 
 module _ {Γ : Con i} (A : Ty j Γ)
@@ -194,7 +193,7 @@ module _ {Γ : Con i} (A : Ty j Γ)
     { tm0 = λ δ → f0 (subst* A (tm0 p δ)) (tm0 a δ)
     ; tm1 = λ { {γ = γ} {γ'} q →
         let aux : HomEq Γ (f1 ρ₀ q) (f1 ρ₁ q) (tm0 p γ) (tm0 p γ')
-            aux = unlift (tm1 p q)
+            aux = unprf (tm1 p q)
             aux1 : IxHom A (f1 ρ₀ q) (tm0 a γ) (tm0 a γ')
             aux1 = tm1 a q
             s = hom-sy Γ
@@ -223,7 +222,7 @@ module _ {Γ : Con i} (A : Ty j Γ)
         --       {!!}
         --         ∎
         -- in goal
-    ; tm-trans = {!!}
+--    ; tm-trans = {!!}
     }
 
 module _ {Γ : Con i} {Ω : Con k} {Δ : Con l}
@@ -233,7 +232,7 @@ module _ {Γ : Con i} {Ω : Con k} {Δ : Con l}
        -> Tm Δ (El-prop ((Γ ~~) ρ₀ ρ₁ γ₀ γ₁ q (p [ γ₀ ]') (p [ γ₁ ]')))
   ~cong p q = record
     { tm0 = λ δ → tm1 p (tm0 q δ)
-    ; tm1 = λ _ → lift tt
-    ; tm-refl = tt
-    ; tm-trans = tt
+    ; tm1 = λ _ → prf ttp
+    ; tm-refl = ttp
+--    ; tm-trans = tt
     }

@@ -5,9 +5,8 @@ module Universes where
 open import Agda.Builtin.Equality renaming (_≡_ to _⇒_ ; refl to reduce)
 open import Agda.Builtin.Equality.Rewrite
 
-open import Data.Product
-open import Util
-open import SetoidEquality hiding (R ; S ; T)
+open import Lib
+open import SetoidEquality
 open import Groupoid
 open import Substitution
 open import Ty
@@ -45,20 +44,20 @@ iso-T {A = A} {C = C} i1 i2 = record
   }
 
 postulate
-  Iso≡ : {A B : Set i} {f g : Iso A B} {Γ : Set k} {x y : Γ} {p : Eq Γ x y}
-       → HEq {Γ = Γ} (λ _ -> Iso A B) p f g
-       ⇒ ΣP' (iso1 f ≡ iso1 g) λ _ → iso2 f ≡ iso2 g
+  Iso≡ : {A B : Set i} {f g : Iso A B}
+       → Eq (Iso A B) f g
+       ⇒ Σp' (iso1 f ≡ iso1 g) λ _ → iso2 f ≡ iso2 g
 {-# REWRITE Iso≡ #-}
 
 const-ty : Groupoid j -> Ty j Γ
 const-ty G = record
   { ∣_∣* = λ _ → G
   ; subst* = λ x →
-      record { f0 = λ x → x ; f1 = λ x → x ; f-R = refl _ {R G _} ; f-T = λ _ _ → refl _ {T G _ _} }
-  ; refl*0 = λ x → refl ∣ G ∣
-  ; refl*1 = λ p → hrefl (λ w → Hom G (proj₁ w) (proj₂ w))
-  ; trans*0 = λ _ _ _ → refl ∣ G ∣
-  ; trans*1 = λ p q r → hrefl (λ w → Hom G (proj₁ w) (proj₂ w))
+      record { f0 = λ x → x ; f1 = λ x → x ; f-R = refl _ (R G _) ; f-T = λ _ _ → refl _ (T G _ _) }
+  ; refl*0 = λ x → refl ∣ G ∣ _
+  ; refl*1 = λ p → refl _ p
+  ; trans*0 = λ _ _ _ → refl ∣ G ∣ _
+  ; trans*1 = λ p q r → refl _ r
   }
 
 Set-ty : (j : Level) -> Ty (lsuc j) Γ
@@ -73,27 +72,27 @@ Set-ty j = const-ty (record
     ; prf1 = λ x → trans A (cong (iso2 p) (prf1 q (iso1 p x))) (prf1 p x)
     ; prf2 = λ x → trans C (cong (iso1 q) (prf2 p (iso2 q x))) (prf2 q x)
     }
-  ; id1 = λ { {p = p} → refl _ {p} }
-  ; id2 = λ { {p = p} → refl _ {p} }
-  ; assoc = λ { {p = p} {q} {r} → refl _ {iso-T (iso-T p q) r} }
+  ; id1 = λ { {p = p} → refl _ p }
+  ; id2 = λ { {p = p} → refl _ p }
+  ; assoc = λ { {p = p} {q} {r} → refl _ (iso-T (iso-T p q) r) }
   ; inv1 = λ { {x = A} {p = p} -> let open Eq-Reasoning A in
-      sp' (λ q → ctx-irrel A (prf1 p _ ∙ q)) (λ q → ctx-irrel A (prf1 p _ ∙ q)) }
+      (λ q → prf1 p _ ∙ q) ,p' (λ q → prf1 p _ ∙ q) }
   ; inv2 = λ { {x = A} {B} {p = p} -> let open Eq-Reasoning B in
-      sp' (λ q → ctx-irrel B (prf2 p _ ∙ q)) (λ q → ctx-irrel B (prf2 p _ ∙ q)) }
+      (λ q → prf2 p _ ∙ q) ,p' (λ q → prf2 p _ ∙ q) }
   })
 
 discrete : Set j -> Groupoid j
 discrete S = record
   { ∣_∣ = S
-  ; Hom = λ x y → Lift (x ≡ y)
-  ; R = λ x -> lift (refl _ {x})
-  ; S = λ { (lift p) → lift (sym S p) }
-  ; T = λ { (lift p) (lift q) → lift (trans S p q) }
-  ; id1 = tt
-  ; id2 = tt
-  ; assoc = tt
-  ; inv1 = tt
-  ; inv2 = tt
+  ; Hom = λ x y → Prf (x ≡ y)
+  ; R = λ x -> prf (refl _ x)
+  ; S = λ { (prf p) → prf (sym S p) }
+  ; T = λ { (prf p) (prf q) → prf (trans S p q) }
+  ; id1 = ttp
+  ; id2 = ttp
+  ; assoc = ttp
+  ; inv1 = ttp
+  ; inv2 = ttp
   }
 
 El-set : Tm Γ (Set-ty j) -> Ty j Γ
@@ -101,16 +100,15 @@ El-set {Γ = Γ} {j = j} t = record
   { ∣_∣* = λ γ → discrete (tm0 t γ)
   ; subst* = λ {γ} {γ'} p → record
     { f0 = iso1 (tm1 t p)
-    ; f1 = λ{ (lift eq) → lift (cong (iso1 (tm1 t p)) eq) }
-    ; f-R = tt
-    ; f-T = λ _ _ → tt
+    ; f1 = λ{ (prf eq) → prf (cong (iso1 (tm1 t p)) eq) }
+    ; f-R = ttp
+    ; f-T = λ _ _ → ttp
     }
-  ; refl*0 = λ {γ = γ} x → {!!}
-     -- cong (λ z -> iso1 z x) {tm1 t _} {IxR {Γ = Γ} (Set-ty j) {γ} _} (tm-refl t {γ})
-  ; refl*1 = λ _ → tt
+  ; refl*0 = λ {γ = γ} x → cong {a0 = tm1 t _} {IxR {Γ = Γ} (Set-ty j) {γ} _} (λ z -> iso1 z x) (tm-refl t {γ})
+  ; refl*1 = λ _ → ttp
   ; trans*0 = λ p q a →
-      let goal1 : iso1 (tm1 t (T Γ p q)) a ≡ iso1 (IxT (Set-ty j) (tm1 t p) (tm1 t q)) a
-          goal1 = cong (λ z → iso1 z a) (tm-trans t {p = p} {q})
+      let goal1 : iso1 (tm1 t (T Γ p q)) a ≡ iso1 (IxT {Γ = Γ} (Set-ty j) (tm1 t p) (tm1 t q)) a
+          goal1 = cong (λ z → iso1 z a) {!!} -- (tm-trans t {p = p} {q})
           goal2 : iso1 (IxT (Set-ty j) (tm1 t p) (tm1 t q)) a ≡ iso1 (tm1 t q) (iso1 (tm1 t p) a)
           goal2 = {!tm1 t p!}
       in trans (tm0 t _) goal1 goal2
@@ -118,7 +116,7 @@ El-set {Γ = Γ} {j = j} t = record
     --   cong (λ z -> iso1 z a) (tm-trans t {p = p} {q})
     --     ∙ cong (iso1 (tm1 t q)) (transportRefl _
     --     ∙ cong (iso1 (tm1 t p)) (transportRefl _))
-  ; trans*1 = λ _ _ _ → tt
+  ; trans*1 = λ _ _ _ → ttp
   }
 
 module _ (A : Tm Γ (Set-ty j)) where
@@ -130,35 +128,35 @@ Prop-set : (j : Level) -> Tm Γ (Set-ty (lsuc j))
 Prop-set j = record
   { tm0 = λ γ → Prop j
   ; tm1 = λ _ → iso-R
-  ; tm-refl = {!!} -- refl _ {iso-R}
-  ; tm-trans = sp' {!!} {!!}
+  ; tm-refl = refl _ iso-R
+--  ; tm-trans = {!!}
   }
 
--- -- module _ {Γ : Con i} (A : Tm Γ (El-set (Prop-set j))) where
+-- module _ {Γ : Con i} (A : Tm Γ (El-set (Prop-set j))) where
 
--- --   IxPropEq : ∀{γ γ'} -> Hom Γ γ γ' -> tm0 A γ -> tm0 A γ' -> {!!}
--- --   -- fst (tm0 A γ) → fst (tm0 A γ') → Set j
--- --   IxPropEq {γ = γ} {γ'} p x y = {!!} -- coe fst (tm1 A p) x ≡ y
+--   IxPropEq : ∀{γ γ'} -> Hom Γ γ γ' -> tm0 A γ -> tm0 A γ' -> {!!}
+--   -- fst (tm0 A γ) → fst (tm0 A γ') → Set j
+--   IxPropEq {γ = γ} {γ'} p x y = {!!} -- coe fst (tm1 A p) x ≡ y
 
 
--- El-prop-into-set : Tm Γ (El-set (Prop-set j)) -> Tm Γ (Set-ty j)
--- El-prop-into-set M = record
---   { tm0 = λ γ → Lift (tm0 M γ)
---   ; tm1 = λ {γ = γ} {γ'} p 
---       coe (λ z → Iso (Lift (tm0 M γ)) (Lift z)) (unlift (tm1 M p)) iso-R
---   ; tm-refl = refl iso-R
---   ; tm-trans = {!!}
---   }
+El-prop-into-set : Tm Γ (El-set (Prop-set j)) -> Tm Γ (Set-ty j)
+El-prop-into-set M = record
+  { tm0 = λ γ → Prf (tm0 M γ)
+  ; tm1 = λ {γ = γ} {γ'} p →
+           coe (λ z → Iso (Prf (tm0 M γ)) (Prf z)) (unprf (tm1 M p)) iso-R
+  ; tm-refl = refl _ iso-R
+  -- ; tm-trans = {!!}
+  }
   
--- El-prop : Tm Γ (El-set (Prop-set j)) -> Ty j Γ
--- El-prop M = El-set (El-prop-into-set M)
+El-prop : Tm Γ (El-set (Prop-set j)) -> Ty j Γ
+El-prop M = El-set (El-prop-into-set M)
 
--- module _ {Γ : Con i} {A : Ty j Γ} (t : Tm (Γ ‣ A) (Set-ty k)) where
+module _ {Γ : Con i} {A : Ty j Γ} (t : Tm (Γ ‣ A) (Set-ty k)) where
 
---   set-curry : (a : Tm Γ A) -> Tm Γ (Set-ty k)
---   set-curry a = record
---     { tm0 = λ γ → tm0 t (γ , tm0 a γ)
---     ; tm1 = λ p → tm1 t (p , tm1 a p)
---     ; tm-refl = {!!}
---     ; tm-trans = {!!}
---     }
+  set-curry : (a : Tm Γ A) -> Tm Γ (Set-ty k)
+  set-curry a = record
+    { tm0 = λ γ → tm0 t (γ , tm0 a γ)
+    ; tm1 = λ p → tm1 t (p , tm1 a p)
+    ; tm-refl = λ { {γ} → {!!} }
+--    ; tm-trans = {!!}
+    }

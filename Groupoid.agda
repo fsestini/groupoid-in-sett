@@ -5,9 +5,8 @@ module Groupoid where
 open import Agda.Builtin.Equality renaming (_≡_ to _⇒_ ; refl to reduce)
 open import Agda.Builtin.Equality.Rewrite
 
-open import Data.Product
-open import Util
-open import SetoidEquality hiding (R ; S ; T)
+open import Lib
+open import SetoidEquality
 
 record Groupoid (i : Level) : Set (lsuc i) where
   no-eta-equality
@@ -30,14 +29,14 @@ open Groupoid public
 Con = Groupoid
 
 postulate
-  Groupoid≡ : {i : Level} {G H : Groupoid i} {Γ : Set k} {x y : Γ} {p : Eq Γ x y}
-      -> HEq {Γ = Γ} (λ _ -> Groupoid i) p G H
-       ⇒ ΣP (∣ G ∣ ≡ ∣ H ∣) λ eq1
-       → ΣP (Het (λ X → X -> X -> Set i) eq1 (Hom G) (Hom H)) λ eq2
-       → Het {A = Σ (Set i) (λ X → X → X → Set i)}
+  Groupoid≡ : {i : Level} {G H : Groupoid i}
+      -> Eq (Groupoid i) G H
+       ⇒ Σp (∣ G ∣ ≡ ∣ H ∣) λ eq1
+       → Σp (HEq (λ X → X -> X -> Set i) eq1 (Hom G) (Hom H)) λ eq2
+       → HEq {I = Σ (Set i) (λ X → X → X → Set i)}
               (λ { (X , Rel) → ∀ {x1} {x2} {x3} → Rel x1 x2 → Rel x2 x3 → Rel x1 x3 })
               {∣ G ∣ , Hom G} {∣ H ∣ , Hom H}
-              (sp eq1 eq2) (T G) (T H)
+              (eq1 ,p eq2) (T G) (T H)
 {-# REWRITE Groupoid≡ #-}
 
 hom-sy : (G : Groupoid i) {a b : _} {p q : Hom G a b} → p ≡ q -> q ≡ p
@@ -94,7 +93,7 @@ module _ (Γ : Con i) {a b c d} {x : Hom Γ a c} {y : Hom Γ b d} {p : Hom Γ a 
        where
 
   HomEq-≡ : HomEq Γ x y p q ≡ HomEq Γ x' y' p' q'
-  HomEq-≡ = sp' equiv1 equiv2
+  HomEq-≡ = equiv1 ,p' equiv2
     where
       open Eq-Reasoning (Hom Γ _ _)
       _∙'_ = hom-tr Γ
@@ -168,13 +167,13 @@ open _⟶_ public
 id-fun : (Γ : Con i) -> Γ ⟶ Γ
 id-fun Γ =
   record { f0 = λ z → z ; f1 = λ z → z
-         ; f-R = refl (Hom Γ _ _) ; f-T = λ p q → refl (Hom Γ _ _) }
+         ; f-R = refl (Hom Γ _ _) _ ; f-T = λ p q → refl (Hom Γ _ _) _ }
 
 postulate
-  ⟶≡ : {H1 : Groupoid i} {H2 : Groupoid j} {F G : H1 ⟶ H2} {Γ : Set k} {x y : Γ} {p : Eq Γ x y}
-      -> HEq {Γ = Γ} (λ _ -> H1 ⟶ H2) p F G
-        ⇒ ΣP (f0 F ≡ f0 G) λ eq1
-        → Het {A = ∣ H1 ∣ -> ∣ H2 ∣}
+  ⟶≡ : {H1 : Groupoid i} {H2 : Groupoid j} {F G : H1 ⟶ H2}
+      -> Eq (H1 ⟶ H2) F G
+        ⇒ Σp (f0 F ≡ f0 G) λ eq1
+        → HEq {I = ∣ H1 ∣ -> ∣ H2 ∣}
               (λ f → ∀{x y} -> Hom H1 x y -> Hom H2 (f x) (f y)) eq1
               (f1 F) (f1 G)
 {-# REWRITE ⟶≡ #-}
